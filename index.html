@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#050b13"><meta name="description" content="Live cyber threat intelligence map powered by public threat feeds.">
+  <title>THREAT // ATLAS — Global Cyber Intelligence</title>
+  <link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://basemaps.cartocdn.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#"><span class="brand-mark">◈</span><span>THREAT<span class="brand-slash">//</span>ATLAS<small>GLOBAL CYBER INTELLIGENCE</small></span></a>
+      <div class="top-status"><span class="pulse"></span><span id="connection-label">CONNECTING TO INTELLIGENCE FEEDS</span></div>
+      <div class="top-actions"><span class="utc" id="clock">--:--:-- UTC</span><button id="refresh" class="icon-btn" title="Refresh intelligence">↻</button><button id="fullscreen" class="icon-btn" title="Fullscreen">⛶</button></div>
+    </header>
+    <main>
+      <section class="hero-row"><div><div class="eyebrow">GLOBAL THREAT LANDSCAPE <span class="live-tag">LIVE INTELLIGENCE</span></div><h1>CYBER THREAT <span>MONITOR</span></h1><p class="subhead">A global view of malicious infrastructure reported by open threat-intelligence feeds.</p></div><div class="updated">LAST SYNC <strong id="last-sync">WAITING FOR DATA</strong></div></section>
+      <section class="metrics" aria-label="Threat statistics">
+        <article class="metric"><div class="metric-label">TRACKED INDICATORS</div><div class="metric-value" id="metric-total">—</div><div class="metric-foot"><span class="metric-dot cyan"></span>Unique IP indicators</div></article>
+        <article class="metric"><div class="metric-label">COUNTRIES OBSERVED</div><div class="metric-value" id="metric-countries">—</div><div class="metric-foot"><span class="metric-dot blue"></span>Geo-enriched locations</div></article>
+        <article class="metric"><div class="metric-label">INTELLIGENCE SOURCES</div><div class="metric-value" id="metric-sources">—</div><div class="metric-foot"><span class="metric-dot green"></span>Public community feeds</div></article>
+        <article class="metric"><div class="metric-label">FEED STATUS</div><div class="metric-value status-value" id="metric-status">SYNCING</div><div class="metric-foot"><span class="metric-dot green"></span>Last checked <span id="age">—</span></div></article>
+      </section>
+      <section class="workspace">
+        <div class="map-panel">
+          <div class="panel-head"><div><span class="panel-kicker">LIVE GLOBAL VIEW</span><h2>Threat infrastructure map</h2></div><div class="map-tools"><span class="map-badge"><i></i> FEED-BASED INTELLIGENCE</span><button id="reset-view" class="small-btn">RESET VIEW</button></div></div>
+          <div class="map-wrap"><div id="map"></div><div class="map-overlay-top"><span>WORLD / IP GEOLOCATION</span><span id="map-count">0 INDICATORS PLOTTED</span></div><div class="map-legend"><div><i class="legend-dot red"></i> Botnet C2</div><div><i class="legend-dot amber"></i> Malicious SSL</div><div><i class="legend-dot blue"></i> Reported hostile IP</div></div><div class="map-watermark">THREAT // ATLAS</div></div>
+          <div class="map-foot"><span>GEOLOCATION IS APPROXIMATE · NOT A LIVE ATTACK TRACE</span><span>MAP DATA © OPENSTREETMAP · CARTO</span></div>
+        </div>
+        <aside class="side-panel"><div class="panel-head side-head"><div><span class="panel-kicker">INTELLIGENCE STREAM</span><h2>Latest indicators</h2></div><span class="count-pill" id="event-count">0</span></div><div class="filter-row"><button class="filter active" data-filter="all">ALL</button><button class="filter" data-filter="Feodo Tracker">FEODO</button><button class="filter" data-filter="SSLBL">SSLBL</button><button class="filter" data-filter="Blocklist.de">BLOCKLIST</button></div><div id="events" class="events"><div class="empty-state">Establishing secure feed connection…</div></div><div class="feed-foot"><span class="pulse"></span> AUTO-REFRESH EVERY 5 MINUTES</div></aside>
+      </section>
+      <section class="sources-section"><div class="section-title"><div><span class="panel-kicker">DATA PROVENANCE</span><h2>Connected intelligence sources</h2></div><span class="source-note">Public defensive threat feeds · Read-only</span></div><div class="source-grid" id="source-grid"><article class="source-card"><span class="source-icon">◉</span><div><b>Feodo Tracker</b><small>Botnet command & control IPs</small></div><span class="source-state">LOADING</span></article><article class="source-card"><span class="source-icon">◇</span><div><b>SSLBL</b><small>Malicious SSL / botnet C2 IPs</small></div><span class="source-state">LOADING</span></article><article class="source-card"><span class="source-icon">⌁</span><div><b>Blocklist.de</b><small>Recently reported hostile IPs</small></div><span class="source-state">LOADING</span></article></div></section>
+      <footer><span>THREAT // ATLAS <b>·</b> COMMUNITY INTELLIGENCE DASHBOARD</span><span>INDICATORS ARE NOT PROOF OF CURRENT ATTACK ACTIVITY. VERIFY BEFORE TAKING ACTION.</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="/assets/app.js"></script>
+</body></html>
