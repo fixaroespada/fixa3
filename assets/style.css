@@ -5,3 +5,6 @@
 @media(max-width:600px){.app-shell{padding:0 11px}.topbar{height:62px;gap:8px}.brand{font-size:14px}.brand-mark{width:31px;height:31px}.top-status{font-size:0;margin-left:auto}.top-status .pulse{font-size:initial}.utc{display:none}.hero-row{padding:26px 0 18px}.hero-row h1{font-size:40px}.updated{font-size:7px}.updated strong{font-size:9px}.metrics{grid-template-columns:repeat(2,1fr)}.metric{padding:12px;border-bottom:1px solid var(--line)}.metric:nth-child(2){border-right:0}.metric:nth-child(n+3){border-bottom:0}.metric-value{font-size:29px}.panel-head{padding:13px}.map-tools{gap:4px}.map-badge{font-size:7px;padding:6px}.small-btn{font-size:8px;padding:6px}.map-wrap #map{height:350px}.map-legend{gap:8px;left:7px;bottom:7px;font-size:7px;padding:7px}.map-overlay-top{font-size:7px;left:8px;right:8px}.map-foot{font-size:6px;padding:0 7px}.map-foot span:last-child{display:none}.source-grid{grid-template-columns:1fr}.section-title{align-items:start;gap:8px;flex-direction:column}footer{font-size:7px;flex-direction:column;gap:7px}}
 
 .source-state.deprecated{color:var(--amber)}
+
+/* Darken standard OSM raster tiles to match the Threat Atlas night interface. */
+.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.78) contrast(.92) saturate(.72)}
