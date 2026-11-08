@@ -6,8 +6,8 @@
 
 .source-state.deprecated{color:var(--amber)}
 
-/* Darken standard OSM raster tiles to match the Threat Atlas night interface. */
-.leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.78) contrast(.92) saturate(.72)}
+/* Darken English-language Tracestrack raster tiles for the operations-room theme. */
+.leaflet-tile-pane{filter:brightness(.72) contrast(.96) saturate(.72)}
 
 
 /* Live operations-room motion layer: animated pulses, radar sweep and signal paths. */
