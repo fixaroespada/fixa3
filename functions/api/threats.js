@@ -1,21 +1,65 @@
 const FEEDS={
- "Feodo Tracker":{url:"https://feodotracker.abuse.ch/downloads/ipblocklist.json",kind:"ip"},
- "Blocklist.de":{url:"https://lists.blocklist.de/lists/all.txt",kind:"ip"},
- "DShield Top 10":{url:"https://feeds.dshield.org/feeds/top10.txt",kind:"ip"},
- "Emerging Threats":{url:"https://rules.emergingthreats.net/blockrules/compromised-ips.txt",kind:"ip"},
- "FireHOL Level 1":{url:"https://raw.githubusercontent.com/firehol/blocklist-ipsets/master/firehol_level1.netset",kind:"ip"},
+ "Feodo Tracker":{url:"https://feodotracker.abuse.ch/downloads/ipblocklist.json",kind:"json-ip"},
+ "Blocklist.de":{url:"https://lists.blocklist.de/lists/all.txt",kind:"text-ip"},
+ "DShield Top 10":{url:"https://feeds.dshield.org/feeds/top10.txt",kind:"text-ip"},
+ "Emerging Threats":{url:"https://rules.emergingthreats.net/blockrules/compromised-ips.txt",kind:"text-ip"},
  "Spamhaus DROP":{url:"https://www.spamhaus.org/drop/drop_v4.json",kind:"network"},
  "CISA KEV":{url:"https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",kind:"kev"},
  "SSLBL":{url:"https://sslbl.abuse.ch/blacklist/sslipblacklist.csv",kind:"deprecated"}
 };
 const validIP=s=>typeof s==="string"&&s.split(".").length===4&&s.split(".").every(n=>/^[0-9]{1,3}$/.test(n)&&Number(n)<=255);
-function parseIP(source,text){const out=[];if(source==="Feodo Tracker"){let data;try{data=JSON.parse(text)}catch{return out}for(const row of Array.isArray(data)?data:[]){const ip=row.ip_address||row.ip||row.dst_ip;if(validIP(ip))out.push({ip,source,type:"Botnet C2",first_seen:row.first_seen||row.firstseen||row.date_added||null})}return out}for(const line of text.split(/\\r?\\n/)){const t=line.trim();if(!t||t.startsWith("#"))continue;const ip=t.split(/[\\s,;]+/)[0];if(validIP(ip))out.push({ip,source,type:source==="DShield Top 10"?"DShield Reported Attacker":source==="Emerging Threats"?"Compromised IP":source==="FireHOL Level 1"?"Aggregated Threat IP":"Reported hostile IP",first_seen:null})}return out}
-async function getFeed(name,meta){try{const r=await fetch(meta.url,{headers:{"User-Agent":"ThreatAtlas-Defensive-Research/1.0","Accept":"application/json,text/plain"},cf:{cacheTtl:meta.kind==="network"||meta.kind==="kev"?3600:300}});if(!r.ok)throw Error("HTTP "+r.status);const text=await r.text();if(meta.kind==="deprecated"&&/deprecated/i.test(text))return{name,status:"DEPRECATED",items:[],count:0,error:"Feed retired by provider"};if(meta.kind==="ip"){const items=parseIP(name,text);return{name,status:"ONLINE",items,count:items.length}}if(meta.kind==="network"){let d=JSON.parse(text);const rows=Array.isArray(d)?d:(d.drop||d.data||d.results||[]);const networks=rows.map(x=>typeof x==="string"?x:(x.cidr||x.network||x.range||"")).filter(Boolean);return{name,status:"ONLINE",items:[],count:networks.length,networks:networks.slice(0,100)}}if(meta.kind==="kev"){const d=JSON.parse(text);const rows=d.vulnerabilities||[];return{name,status:"ONLINE",items:[],count:rows.length,kev:rows.slice(0,12).map(x=>({id:x.cveID,vendor:x.vendorProject,product:x.product,name:x.vulnerabilityName,added:x.dateAdded,due:x.dueDate,ransomware:x.knownRansomwareCampaignUse,description:x.shortDescription}))}}return{name,status:"ERROR",items:[],count:0}}catch(e){return{name,status:"ERROR",items:[],count:0,error:String(e.message||e).slice(0,180)}}}
-async function locateBatch(ips){if(!ips.length)return{results:[],diagnostics:["No IPs to locate"]};try{const r=await fetch("https://hackmyip.com/api/bulk",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({ips}),cf:{cacheTtl:3600}});const raw=await r.text();if(!r.ok)return{results:[],diagnostics:["hackmyip.com: HTTP "+r.status+" "+raw.slice(0,160)]};const d=JSON.parse(raw),rows=d?.data?.results||d?.results||[];const results=rows.filter(x=>x&&x.ip&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).map(x=>({ip:x.ip,country:x.country||null,country_code:x.country_code||x.countryCode||null,lat:Number(x.lat),lon:Number(x.lon),geo_source:"hackmyip.com"}));return{results,diagnostics:["hackmyip.com: returned "+rows.length+" rows; coordinates "+results.length]}}catch(e){return{results:[],diagnostics:["hackmyip.com: "+String(e.message||e).slice(0,160)]}}}
+const extractIPs=text=>[...new Set((text.match(/(?:^|[^0-9])((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?=$|[^0-9])/gm)||[]).map(x=>x.trim()).filter(validIP))];
+function parseIP(source,text,kind){
+ const out=[];
+ if(kind==="json-ip"){
+  let data;try{data=JSON.parse(text)}catch{return out}
+  for(const row of Array.isArray(data)?data:[]){
+   const ip=row.ip_address||row.ip||row.dst_ip;
+   if(validIP(ip))out.push({ip,source,type:"Botnet C2",first_seen:row.first_seen||row.firstseen||row.date_added||null});
+  }
+  return out;
+ }
+ const ips=extractIPs(text);
+ for(const ip of ips)out.push({ip,source,type:source==="DShield Top 10"?"DShield Reported Attacker":source==="Emerging Threats"?"Compromised IP":"Reported hostile IP",first_seen:null});
+ return out;
+}
+async function getFeed(name,meta){
+ try{
+  const r=await fetch(meta.url,{headers:{"User-Agent":"ThreatAtlas-Defensive-Research/1.0","Accept":"application/json,text/plain"},cf:{cacheTtl:meta.kind==="network"||meta.kind==="kev"?3600:300}});
+  if(!r.ok)throw Error("HTTP "+r.status);
+  const text=await r.text();
+  if(meta.kind==="deprecated"&&/deprecated/i.test(text))return{name,status:"DEPRECATED",items:[],count:0,error:"Feed retired by provider"};
+  if(meta.kind==="json-ip"||meta.kind==="text-ip"){
+   const items=parseIP(name,text,meta.kind);
+   return{name,status:"ONLINE",items,count:items.length};
+  }
+  if(meta.kind==="network"){
+   let d;try{d=JSON.parse(text)}catch{d=null}
+   const rows=Array.isArray(d)?d:(d?.drop||d?.data||d?.results||[]);
+   const networks=rows.map(x=>typeof x==="string"?x:(x.cidr||x.network||x.range||"")).filter(Boolean);
+   return{name,status:"ONLINE",items:[],count:networks.length,networks:networks.slice(0,100)};
+  }
+  if(meta.kind==="kev"){
+   const d=JSON.parse(text),rows=d.vulnerabilities||[];
+   return{name,status:"ONLINE",items:[],count:rows.length,kev:rows.slice(0,12).map(x=>({id:x.cveID,vendor:x.vendorProject,product:x.product,name:x.vulnerabilityName,added:x.dateAdded,due:x.dueDate,ransomware:x.knownRansomwareCampaignUse,description:x.shortDescription}))};
+  }
+  return{name,status:"ERROR",items:[],count:0};
+ }catch(e){return{name,status:"ERROR",items:[],count:0,error:String(e.message||e).slice(0,180)}}
+}
+async function locateBatch(ips){
+ if(!ips.length)return{results:[],diagnostics:["No IPs to locate"]};
+ try{
+  const r=await fetch("https://hackmyip.com/api/bulk",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({ips}),cf:{cacheTtl:3600}});
+  const raw=await r.text();if(!r.ok)return{results:[],diagnostics:["hackmyip.com: HTTP "+r.status+" "+raw.slice(0,160)]};
+  const d=JSON.parse(raw),rows=d?.data?.results||d?.results||[];
+  const results=rows.filter(x=>x&&x.ip&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))).map(x=>({ip:x.ip,country:x.country||null,country_code:x.country_code||x.countryCode||null,lat:Number(x.lat),lon:Number(x.lon),geo_source:"hackmyip.com"}));
+  return{results,diagnostics:["hackmyip.com: returned "+rows.length+" rows; coordinates "+results.length]};
+ }catch(e){return{results:[],diagnostics:["hackmyip.com: "+String(e.message||e).slice(0,160)]}}
+}
 export async function onRequestGet(){
  const results=await Promise.all(Object.entries(FEEDS).map(([name,meta])=>getFeed(name,meta)));
  const unique=new Map();for(const r of results)for(const x of r.items||[])if(!unique.has(x.ip))unique.set(x.ip,x);
- const indicators=[...unique.values()].slice(0,180),sample=indicators.map(x=>x.ip),geoResults=[],geoDiagnostics=[];
+ const indicators=[...unique.values()].slice(0,300),sample=indicators.map(x=>x.ip),geoResults=[],geoDiagnostics=[];
  for(let i=0;i<sample.length;i+=50){const batch=await locateBatch(sample.slice(i,i+50));geoResults.push(...batch.results);geoDiagnostics.push(...batch.diagnostics)}
  const byIP=new Map(geoResults.map(x=>[x.ip,x]));
  const enriched=indicators.map(x=>{const g=byIP.get(x.ip);return{...x,country:g?.country||null,country_code:g?.country_code||null,lat:g?.lat??null,lon:g?.lon??null,geo_source:g?.geo_source||null}});
