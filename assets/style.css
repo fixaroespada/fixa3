@@ -29,3 +29,5 @@
 .map-hud{position:absolute;z-index:520;right:13px;top:48px;display:flex;gap:7px;align-items:center;padding:7px 9px;background:#07111de8;border:1px solid #3a5268;color:#b9cad9;font:8px var(--mono);letter-spacing:.8px;pointer-events:none}
 .map-hud i{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 9px var(--red);animation:pulse .8s infinite}
 @media(prefers-reduced-motion:reduce){.map-wrap:before,.map-wrap:after,.threat-pin,.threat-pin:before,.threat-pin:after,.signal-path,.event{animation:none!important}}
+
+.country-flag{display:inline-block;width:20px;height:15px;object-fit:cover;vertical-align:-3px;margin-right:5px;border:1px solid #71849a66;border-radius:2px;box-shadow:0 0 5px #0008}.country-unknown{display:inline-block;margin-right:5px}
