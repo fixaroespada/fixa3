@@ -8,7 +8,7 @@ const FEEDS={
  "SSLBL":{url:"https://sslbl.abuse.ch/blacklist/sslipblacklist.csv",kind:"deprecated"}
 };
 const validIP=s=>typeof s==="string"&&s.split(".").length===4&&s.split(".").every(n=>/^[0-9]{1,3}$/.test(n)&&Number(n)<=255);
-const extractIPs=text=>[...new Set((text.match(/(?:^|[^0-9])((?:[0-9]{1,3}\\.){3}[0-9]{1,3})(?=$|[^0-9])/gm)||[]).map(x=>x.trim()).filter(validIP))];
+const extractIPs=text=>[...new Set([...text.matchAll(/(?:^|[^0-9])((?:[0-9]{1,3}\.){3}[0-9]{1,3})(?=$|[^0-9])/gm)].map(m=>m[1]).filter(validIP))];
 function parseIP(source,text,kind){
  const out=[];
  if(kind==="json-ip"){
