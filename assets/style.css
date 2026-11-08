@@ -8,3 +8,24 @@
 
 /* Darken standard OSM raster tiles to match the Threat Atlas night interface. */
 .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.78) contrast(.92) saturate(.72)}
+
+
+/* Live operations-room motion layer: animated pulses, radar sweep and signal paths. */
+.map-wrap{overflow:hidden}
+.map-wrap:after{content:"";position:absolute;z-index:350;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 0%,#42dff008 48%,#42dff01b 50%,#42dff008 52%,transparent 100%);background-size:100% 220px;animation:screenScan 7s linear infinite;mix-blend-mode:screen}
+.map-wrap:before{content:"";position:absolute;z-index:340;left:-30%;right:-30%;top:0;height:2px;pointer-events:none;background:linear-gradient(90deg,transparent,#39d6e8aa,#eaffff, #39d6e8aa,transparent);box-shadow:0 0 14px #39d6e8;animation:radarSweep 9s linear infinite}
+@keyframes screenScan{from{background-position:0 -220px}to{background-position:0 490px}}
+@keyframes radarSweep{from{transform:translateY(-5px);opacity:0}8%{opacity:.8}92%{opacity:.8}to{transform:translateY(500px);opacity:0}}
+.threat-pin{position:relative;display:block;animation:pinGlow 1.8s ease-in-out infinite}
+.threat-pin:before,.threat-pin:after{content:"";position:absolute;inset:-5px;border:1px solid currentColor;border-radius:50%;opacity:.75;animation:pinWave 2.2s ease-out infinite}
+.threat-pin:after{animation-delay:1.1s}
+.threat-pin.ssl{color:var(--amber)}.threat-pin.block{color:var(--blue)}.threat-pin:not(.ssl):not(.block){color:var(--red)}
+@keyframes pinWave{0%{transform:scale(.45);opacity:.9}100%{transform:scale(3.4);opacity:0}}
+@keyframes pinGlow{50%{filter:brightness(1.8);box-shadow:0 0 0 5px #ff536733,0 0 22px currentColor}}
+.signal-path{stroke:#ff5367;stroke-width:1.6;stroke-dasharray:5 10;stroke-linecap:round;filter:drop-shadow(0 0 4px #ff5367);animation:signalFlow 1.1s linear infinite;opacity:.72}
+@keyframes signalFlow{to{stroke-dashoffset:-30}}
+.event{animation:eventArrive .45s ease both}
+@keyframes eventArrive{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.map-hud{position:absolute;z-index:520;right:13px;top:48px;display:flex;gap:7px;align-items:center;padding:7px 9px;background:#07111de8;border:1px solid #3a5268;color:#b9cad9;font:8px var(--mono);letter-spacing:.8px;pointer-events:none}
+.map-hud i{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 9px var(--red);animation:pulse .8s infinite}
+@media(prefers-reduced-motion:reduce){.map-wrap:before,.map-wrap:after,.threat-pin,.threat-pin:before,.threat-pin:after,.signal-path,.event{animation:none!important}}
