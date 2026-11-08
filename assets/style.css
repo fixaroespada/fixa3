@@ -7,7 +7,7 @@
 .source-state.deprecated{color:var(--amber)}
 
 /* Darken English-language Tracestrack raster tiles for the operations-room theme. */
-.leaflet-tile-pane{filter:brightness(.72) contrast(.96) saturate(.72)}
+.leaflet-tile-pane{filter:brightness(.62) invert(.88) hue-rotate(180deg) saturate(.58) contrast(.92)}
 
 
 /* Live operations-room motion layer: animated pulses, radar sweep and signal paths. */
