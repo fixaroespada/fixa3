@@ -16,8 +16,13 @@ export async function onRequestGet(){
  const results=await Promise.all(Object.entries(FEEDS).map(async([source,url])=>{try{const r=await fetch(url,{headers:{"User-Agent":"ThreatAtlas-Defensive-Research/1.0","Accept":"application/json,text/plain"},cf:{cacheTtl:240}});if(!r.ok)throw Error("HTTP "+r.status);const text=await r.text();if(source==="SSLBL"&&/deprecated/i.test(text))return{source,status:"DEPRECATED",items:[],error:"Feed retired by provider"};return{source,status:"ONLINE",items:parse(source,text).slice(0,100)}}catch(e){return{source,status:"ERROR",items:[],error:String(e.message||e)}}}));
  const unique=new Map();for(const r of results)for(const x of r.items)if(!unique.has(x.ip))unique.set(x.ip,x);
  const indicators=[...unique.values()].slice(0,120);
- const sample=indicators.slice(0,50).map(x=>x.ip);
- const geo=await locateBatch(sample);
+ const sample=indicators.map(x=>x.ip);
+ const geoResults=[];const geoDiagnostics=[];
+ for(let i=0;i<sample.length;i+=50){
+  const batch=await locateBatch(sample.slice(i,i+50));
+  geoResults.push(...batch.results);geoDiagnostics.push(...batch.diagnostics);
+ }
+ const geo={results:geoResults,diagnostics:geoDiagnostics};
  const byIP=new Map(geo.results.map(x=>[x.ip,x]));
  const enriched=indicators.map(x=>{const g=byIP.get(x.ip);return{...x,country:g?.country||null,country_code:g?.country_code||null,lat:g?.lat??null,lon:g?.lon??null,geo_source:g?.geo_source||null}});
  const active=results.filter(x=>x.status==="ONLINE").length;
